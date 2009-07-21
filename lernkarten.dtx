@@ -1,0 +1,172 @@
+\listfiles
+% \iffalse
+%% File: lernkarten.dtx
+%<*driver>
+\def\nameofplainTeX{plain}
+\ifx\fmtname\nameofplainTeX\else
+  \expandafter\begingroup
+\fi
+\input docstrip.tex
+\askforoverwritefalse
+\preamble
+
+EXPERIMENTAL CODE
+
+Do not distribute this file without also distributing the
+source files specified above.
+
+Do not distribute a modified version of this file under the same name.
+
+\endpreamble
+% stop docstrip adding \endinput
+\postamble
+\endpostamble
+\keepsilent
+\generate{\file{lernkarten.cls}{\from{lernkarten.dtx}{class}}}
+
+\ifx\fmtname\nameofplainTeX
+  \expandafter\endbatchfile
+\else
+  \expandafter\endgroup
+\fi
+\ProvidesFile{lernkarten.cls}
+  []%\today v0.a typeset your lerning cards]
+\documentclass{gmdocc}
+\usepackage{
+  hyperref,
+  polyglossia
+}
+\hypersetup{
+  pdfborder= 0 0 0,
+  colorlinks=true,
+  linkcolor=blue
+}
+\setmainlanguage{german}
+\setmainfont{TeX Gyre Pagella}
+
+\title{the class |lernkarten|}
+\author{Arno Trautmann\\ \href{mailto:arno.trautmann@gmx.de}{arno.trautmann@gmx.de}}
+\def\marginpartt{\ttfamily}
+
+\begin{document}
+\DocInput{lernkarten.dtx}
+\end{document}
+%</driver>
+%
+%<*class>
+% \fi
+% \maketitle
+% \begin{macrocode}
+\def\cards@per@page{10}
+\RequirePackage{xkeyval}
+\DeclareOptionX{anzahl}{\def\cards@per@page{#1}}
+\ProcessOptionsX
+\LoadClass{scrartcl}
+\usepackage{
+  boxedminipage,
+  calc,
+  geometry,
+  hyperref,
+  polyglossia,
+  xltxtra
+}
+
+\geometry{
+  bindingoffset=0cm,
+  margin=1cm
+}
+\setlength{\parindent}{0em}
+% \end{macrocode}
+
+% \begin{macrocode}
+\TeXXeTstate=1
+
+\def\height@of@boxes{\paperheight/(\cards@per@page)}
+
+\newcommand\lernkarte[1]{%
+  \smallskip
+  \boxedminipage{.48\textwidth}\textbf{#1}\\[2ex]%
+  \vphantom{\rule[-\height@of@boxes]{0pt}{\height@of@boxes}}
+  \minipage[t]{\textwidth}%
+}
+
+\def\endlernkarte{
+  \endminipage
+  \endboxedminipage\hfill
+}
+
+\newcounter{total@question}           %% total number of questions
+\setcounter{total@question}{0}
+
+\newcounter{question@page}     %% the n-th question on one page
+\setcounter{question@page}{1}
+
+\newcounter{answer@page}             %% the n-th answer@page on one page
+
+
+\def\card#1#2#3{ % {Title}{question}{answer}
+  %% typesetting the question:
+  % use the environment lernkarte for the layout
+  \begin{lernkarte}{\stepcounter{total@question}\thetotal@question: #1}
+  #2
+  \end{lernkarte}
+  %
+  \expandafter\def\csname answer@\thequestion@page \endcsname{#3}
+  \stepcounter{question@page}
+  %
+  %% typeset the answers
+  % when the page is full of questions, …
+  \ifnum\thequestion@page > \cards@per@page
+    \hspace*{-1em}\clearpage
+  % … the answers come:
+    \setcounter{answer@page}{1}
+  % we loop through all saved answers
+    \loop
+  % and typeset them from the right, so every answer is on the back of the correct question
+    \beginR
+  % the stop-criterium for the loop
+    \ifnum\theanswer@page > \cards@per@page
+    \else % a <= is needed, actually …
+  % typeset the answer using lernkarte as well, so the layout is consistent
+      \begin{lernkarte}{Antwort}
+  %
+        \csname answer@\theanswer@page\endcsname
+      \end{lernkarte}
+      \stepcounter{answer@page}
+    \repeat
+  % after all answers are typeset, we want the next questions in L to R
+    \hspace*{2em}   %% FIXME no idea why I need an hspace here to get the position correct …
+    \setcounter{question@page}{1}
+    \setcounter{answer@page}{0}
+    \clearpage
+  \fi
+}
+% \end{macrocode}
+% typeset the missing answers …
+% ok, this is VERY buggy … but the important information is there …
+% \begin{macrocode}
+\AtEndDocument{\clearpage
+  \setcounter{answer@page}{1}
+  \loop
+  \beginR
+  \ifnum\theanswer@page > \cards@per@page
+  \else
+    \begin{lernkarte}{Antwort}
+      \csname answer@\theanswer@page\endcsname
+    \end{lernkarte}
+    \stepcounter{answer@page}
+  \repeat
+  \beginL
+  \setcounter{question@page}{1}
+  \setcounter{answer@page}{0}
+}
+\makeatother
+% \end{macrocode}
+% And finally the user-interface:
+% \begin{macrocode}
+\newcommand\karte[3][]{\card{#1}{#2}{#3}}
+% \end{macrocode}
+% </class>
+% \Finale
+%
+% \endinput
