@@ -1,6 +1,5 @@
-\listfiles
 % \iffalse
-%% File: lernkarten.dtx
+%% File: lernkarten.dtx by Arno Trautmann, mail: arno dot trautmann at gmx dot de
 %<*driver>
 \def\nameofplainTeX{plain}
 \ifx\fmtname\nameofplainTeX\else
@@ -18,7 +17,6 @@ source files specified above.
 Do not distribute a modified version of this file under the same name.
 
 \endpreamble
-% stop docstrip adding \endinput
 \postamble
 \endpostamble
 \keepsilent
@@ -30,7 +28,7 @@ Do not distribute a modified version of this file under the same name.
   \expandafter\endgroup
 \fi
 \ProvidesFile{lernkarten.cls}
-  []%\today v0.a typeset your lerning cards]
+  [21.07.2009 v0.a typeset your lerning cards]
 \documentclass{gmdocc}
 \usepackage{
   hyperref,
@@ -77,7 +75,7 @@ Do not distribute a modified version of this file under the same name.
 }
 \setlength{\parindent}{0em}
 % \end{macrocode}
-
+% Need |\TeXXeTstate=1| for the right-to-left typesetting of the answers
 % \begin{macrocode}
 \TeXXeTstate=1
 
@@ -122,19 +120,19 @@ Do not distribute a modified version of this file under the same name.
     \setcounter{answer@page}{1}
   % we loop through all saved answers
     \loop
-  % and typeset them from the right, so every answer is on the back of the correct question
+  % and typeset them L to R, so every answer is on the back of the correct question
     \beginR
   % the stop-criterium for the loop
     \ifnum\theanswer@page > \cards@per@page
     \else % a <= is needed, actually …
-  % typeset the answer using lernkarte as well, so the layout is consistent
+  %
       \begin{lernkarte}{Antwort}
   %
         \csname answer@\theanswer@page\endcsname
       \end{lernkarte}
       \stepcounter{answer@page}
     \repeat
-  % after all answers are typeset, we want the next questions in L to R
+  %
     \hspace*{2em}   %% FIXME no idea why I need an hspace here to get the position correct …
     \setcounter{question@page}{1}
     \setcounter{answer@page}{0}
@@ -160,7 +158,6 @@ Do not distribute a modified version of this file under the same name.
   \setcounter{question@page}{1}
   \setcounter{answer@page}{0}
 }
-\makeatother
 % \end{macrocode}
 % And finally the user-interface:
 % \begin{macrocode}
