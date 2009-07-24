@@ -28,7 +28,7 @@ Do not distribute a modified version of this file under the same name.
   \expandafter\endgroup
 \fi
 \ProvidesFile{lernkarten.cls}
-  [21.07.2009 v0.a typeset your lerning cards]
+  [24.07.2009 v0.b typeset your lerning cards]
 \documentclass{gmdocc}
 \usepackage{
   hyperref,
@@ -42,20 +42,31 @@ Do not distribute a modified version of this file under the same name.
 \setmainlanguage{english}
 \setmainfont{TeX Gyre Pagella}
 
-\title{the class |lernkarten|}
+\title{|lernkarten|}
 \author{Arno Trautmann\\ \href{mailto:arno.trautmann@gmx.de}{arno.trautmann@gmx.de}}
 \def\marginpartt{\ttfamily}
 
 \begin{document}
 \maketitle
 \begin{abstract}
-This is the documentation of the class |lernkarten|. I am writing this class to have an easy way to typeset my cards for learning for exams, especially diploma-exams. As I always loose and forget things, I wanted to have all important stuff on my computer so I will not forget it.
-
-Just print and learn \raisebox{1.5ex}{\rotatebox{-90}{:-)}}
+This is the documentation of the class |lernkarten|. I am writing this class to have an easy way to typeset my cards for learning for exams, especially diploma-exams. As I always loose and forget things, I wanted to have all important stuff on my computer so I will not forget it. – Just print and learn \raisebox{1.5ex}{\rotatebox{-90}{:-)}}
 \end{abstract}
 \tableofcontents
 \section{Usage}
 The usage of this cass is quite easy. Just load it with
+\begin{verbatim}
+\documentclass{lernkarten}
+\end{verbatim}
+Class options are:
+\begin{description}
+\item[number] The number of cards per page. This directly affects the size of each card. You must take care that none of your cards does exceed the given size! Else there will be huge damage and the sun will explode!
+
+A reasonable number, and therefore preset, is 10.
+\item[noheader] If you use sections and/or parts to structure your cards, they will be in the header. |noheader| will turn this off.
+\item[sectioncards] Prints the section on every card. So you always know what theme this cards belongs to. Default is off.
+\item[enumerate] By default, all cards are enumerated. |enumerate=false| turns enumeration off.
+\end{description}
+
 \section{Implementation}
 \DocInput{lernkarten.dtx}
 \end{document}
@@ -63,27 +74,42 @@ The usage of this cass is quite easy. Just load it with
 %
 %<*class>
 % \fi
+% We begin with loading of options and setting of constants:
 % \begin{macrocode}
+\def\cards@per@page{10}
+\def\cards@enumerate@value{}
+
 \newif\ifcards@header
 \newif\ifcards@sections
+\newif\ifcards@sectioncards
+\newif\ifcards@enumerate
+\newif\ifcards@enumerate@section
 \cards@headertrue
-\def\cards@per@page{10}
+\cards@sectioncardsfalse
+\cards@enumeratetrue
+\cards@enumerate@sectionfalse
+
 \RequirePackage{xkeyval}
 \DeclareOptionX{anzahl}{\def\cards@per@page{#1}}
 \DeclareOptionX{number}{\def\cards@per@page{#1}}
-\DeclareOptionX{english}{\def\card@language@english{}}
 \DeclareOptionX{noheader}{\cards@headerfalse}
+\DeclareOptionX{enumerate}{\def\cards@enumerate@value{#1}}
 \ProcessOptionsX
+
 \LoadClass[fleqn]{scrartcl}
-\usepackage{
+\RequirePackage{
   boxedminipage,
   calc,
   geometry,
   hyperref,
+  ifthen,
   polyglossia,
   scrpage2,
   xltxtra
 }
+
+\ifthenelse{\equal{\cards@enumerate@value}{false}}{\cards@enumeratefalse}{}
+\ifthenelse{\equal{\cards@enumerate@value}{section}}{\cards@enumerate@sectiontrue}{}
 
 \geometry{
   bindingoffset=0cm,
@@ -100,18 +126,26 @@ The usage of this cass is quite easy. Just load it with
 % Now, the pagelayout. |scrheadings| is used and |part:section| is written on top of every site. If option |noheader| is given, there will be no header. This might be useful for printing, while headers are useful for view on screen.
 % \begin{macrocode}
 \pagestyle{scrheadings}
+\setkomafont{pagehead}{\normalfont\bfseries}
 \cfoot{}
 \ifcards@header
   \chead{\cards@part\cards@sect}
 \else
 \fi
-  \renewcommand\section[1]{
+\renewcommand\section[1]{
   \ifnum \thequestion@page > 1
     \set@answers
   \fi
   \def\cards@sect{#1}
+  \ifcards@enumerate@section
+    \setcounter{total@question}{0}
+  \fi
 }
 \renewcommand\part[1]{
+  \ifnum \thequestion@page > 1
+    \set@answers
+  \fi
+  \def\cards@sect{#1}
   \def\cards@part{#1:~}
 }
 % \end{macrocode}
@@ -122,32 +156,36 @@ The usage of this cass is quite easy. Just load it with
 \def\height@of@boxes{\paperheight/(\cards@per@page)}
 
 \newcommand\lernkarte[1]{%
-  \smallskip
-  \boxedminipage{.48\textwidth}\textbf{#1}\\[2ex]%
+  \boxedminipage{.5\textwidth}\textbf{#1}\\[2ex]%
   \vphantom{\rule[-\height@of@boxes]{0pt}{\height@of@boxes}}
   \minipage[t]{\textwidth}%
 }
 
 \def\endlernkarte{
   \endminipage
-  \endboxedminipage\hfill
+  \endboxedminipage\kern-1em
 }
-
+% \end{macrocode}
+% Now setup some counter. They will be used to number the cards. So you might sort your cards and you can see how far you come on one day … or you can exchange with your partners (”Having trouble on question 1357 – can you explain that equation?“)
+% \begin{macrocode}
 \newcounter{total@question}           %% total number of questions
 \setcounter{total@question}{0}
-
 \newcounter{total@answer}           %% total number of answers
 \setcounter{total@answer}{0}
-
 \newcounter{question@page}     %% the n-th question on one page
 \setcounter{question@page}{1}
-
 \newcounter{answer@page}             %% the n-th answer@page on one page
 
 \def\card#1#2#3{ % {Title}{question}{answer}
   %% typesetting the question:
   % use the environment lernkarte for the layout
-  \begin{lernkarte}{\stepcounter{total@question}\thetotal@question: #1}
+  \begin{lernkarte}{%
+    \stepcounter{total@question}%
+    \ifcards@enumerate%
+      \thetotal@question: %
+    \fi%
+    #1%
+  }
   #2
   \end{lernkarte}
   %
