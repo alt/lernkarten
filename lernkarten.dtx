@@ -63,8 +63,8 @@ Class options are:
 
 A reasonable number, and therefore preset, is 10.
 \item[noheader] If you use sections and/or parts to structure your cards, they will be in the header. |noheader| will turn this off.
-\item[sectioncards] Prints the section on every card. So you always know what theme this cards belongs to. Default is off.
-\item[enumerate] By default, all cards are enumerated. |enumerate=false| turns enumeration off.
+\item[sectiononcards] Prints the section on every card. So you always know what theme this cards belongs to. Default is off.
+\item[enumerate] By default, all cards are enumerated. |enumerate=false| turns enumeration off. With value |section|, the cards will be enumerated section-wise.
 \end{description}
 
 \section{Implementation}
@@ -107,7 +107,9 @@ A reasonable number, and therefore preset, is 10.
   scrpage2,
   xltxtra
 }
-
+% \end{macrocode}
+% For evalutation of the enumeration we need some booleans. First one: enumeration at all, second one: section-wise enumeration.
+% \begin{macrocode}
 \ifthenelse{\equal{\cards@enumerate@value}{false}}{\cards@enumeratefalse}{}
 \ifthenelse{\equal{\cards@enumerate@value}{section}}{\cards@enumerate@sectiontrue}{}
 
