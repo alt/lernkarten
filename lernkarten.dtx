@@ -39,7 +39,7 @@ Do not distribute a modified version of this file under the same name.
   colorlinks=true,
   linkcolor=blue
 }
-\setmainlanguage{german}
+\setmainlanguage{english}
 \setmainfont{TeX Gyre Pagella}
 
 \title{the class |lernkarten|}
@@ -47,33 +47,73 @@ Do not distribute a modified version of this file under the same name.
 \def\marginpartt{\ttfamily}
 
 \begin{document}
+\maketitle
+\begin{abstract}
+This is the documentation of the class |lernkarten|. I am writing this class to have an easy way to typeset my cards for learning for exams, especially diploma-exams. As I always loose and forget things, I wanted to have all important stuff on my computer so I will not forget it.
+
+Just print and learn \raisebox{1.5ex}{\rotatebox{-90}{:-)}}
+\end{abstract}
+\tableofcontents
+\section{Usage}
+The usage of this cass is quite easy. Just load it with
+\section{Implementation}
 \DocInput{lernkarten.dtx}
 \end{document}
 %</driver>
 %
 %<*class>
 % \fi
-% \maketitle
 % \begin{macrocode}
+\newif\ifcards@header
+\newif\ifcards@sections
+\cards@headertrue
 \def\cards@per@page{10}
 \RequirePackage{xkeyval}
 \DeclareOptionX{anzahl}{\def\cards@per@page{#1}}
+\DeclareOptionX{number}{\def\cards@per@page{#1}}
+\DeclareOptionX{english}{\def\card@language@english{}}
+\DeclareOptionX{noheader}{\cards@headerfalse}
 \ProcessOptionsX
-\LoadClass{scrartcl}
+\LoadClass[fleqn]{scrartcl}
 \usepackage{
   boxedminipage,
   calc,
   geometry,
   hyperref,
   polyglossia,
+  scrpage2,
   xltxtra
 }
 
 \geometry{
   bindingoffset=0cm,
-  margin=1cm
+  margin=1cm,
+  headsep=0.2cm
 }
 \setlength{\parindent}{0em}
+
+\def\cards@answertext{Antwort}
+
+\def\cards@part{}
+\def\cards@sect{}
+% \end{macrocode}
+% Now, the pagelayout. |scrheadings| is used and |part:section| is written on top of every site. If option |noheader| is given, there will be no header. This might be useful for printing, while headers are useful for view on screen.
+% \begin{macrocode}
+\pagestyle{scrheadings}
+\cfoot{}
+\ifcards@header
+  \chead{\cards@part\cards@sect}
+\else
+\fi
+  \renewcommand\section[1]{
+  \ifnum \thequestion@page > 1
+    \set@answers
+  \fi
+  \def\cards@sect{#1}
+}
+\renewcommand\part[1]{
+  \def\cards@part{#1:~}
+}
 % \end{macrocode}
 % Need |\TeXXeTstate=1| for the right-to-left typesetting of the answers
 % \begin{macrocode}
@@ -96,11 +136,13 @@ Do not distribute a modified version of this file under the same name.
 \newcounter{total@question}           %% total number of questions
 \setcounter{total@question}{0}
 
+\newcounter{total@answer}           %% total number of answers
+\setcounter{total@answer}{0}
+
 \newcounter{question@page}     %% the n-th question on one page
 \setcounter{question@page}{1}
 
 \newcounter{answer@page}             %% the n-th answer@page on one page
-
 
 \def\card#1#2#3{ % {Title}{question}{answer}
   %% typesetting the question:
@@ -115,53 +157,60 @@ Do not distribute a modified version of this file under the same name.
   %% typeset the answers
   % when the page is full of questions, …
   \ifnum\thequestion@page > \cards@per@page
-    \hspace*{-1em}\clearpage
-  % … the answers come:
-    \setcounter{answer@page}{1}
-  % we loop through all saved answers
-    \loop
-  % and typeset them L to R, so every answer is on the back of the correct question
-    \beginR
-  % the stop-criterium for the loop
-    \ifnum\theanswer@page > \cards@per@page
-    \else % a <= is needed, actually …
-  %
-      \begin{lernkarte}{Antwort}
-  %
-        \csname answer@\theanswer@page\endcsname
-      \end{lernkarte}
-      \stepcounter{answer@page}
-    \repeat
-  %
-    \hspace*{2em}   %% FIXME no idea why I need an hspace here to get the position correct …
-    \setcounter{question@page}{1}
-    \setcounter{answer@page}{0}
-    \clearpage
+    \set@answers
   \fi
 }
 % \end{macrocode}
+% Now we try a nicer way to typeset the answers:
+% \begin{macrocode}
+\def\set@answers{
+  \hspace*{-2em}%    %% FIXME here, too, space must be insertet. why the hell?!
+  \clearpage
+  \setcounter{answer@page}{1}
+% we loop through all saved answers
+  \loop
+% and typeset them L to R, so every answer is on the back of the correct question
+  \beginR
+% the stop-criterium for the loop
+  \ifnum\theanswer@page = \thequestion@page
+  \else % a <= is needed, actually …
+%
+    \begin{lernkarte}{\cards@answertext: \stepcounter{total@answer}\thetotal@answer}
+      \csname answer@\theanswer@page\endcsname
+    \end{lernkarte}
+%
+    \stepcounter{answer@page}
+  \repeat
+%
+  \hspace*{2em}   %% FIXME no idea why I need an hspace here to get the position correct …
+  \setcounter{question@page}{1}
+  \setcounter{answer@page}{0}
+  \clearpage
+}
+% \end{macrocode}
+
 % typeset the missing answers …
 % ok, this is VERY buggy … but the important information is there …
 % \begin{macrocode}
-\AtEndDocument{\clearpage
-  \setcounter{answer@page}{1}
-  \loop
-  \beginR
-  \ifnum\theanswer@page > \cards@per@page
-  \else
-    \begin{lernkarte}{Antwort}
-      \csname answer@\theanswer@page\endcsname
-    \end{lernkarte}
-    \stepcounter{answer@page}
-  \repeat
-  \beginL
-  \setcounter{question@page}{1}
-  \setcounter{answer@page}{0}
+\AtEndDocument{
+  \set@answers
 }
 % \end{macrocode}
-% And finally the user-interface:
+% And finally the user-interface. For short question-answer groups, use |\karte|. For longer pairs, use the |\frage|–|\antwort|-construct. Example:
+% \begin{verbatim}
+% \karte[Ionradius]{ion radius of U?}{15nm}
+% \end{verbatim}
+% or
+% \begin{verbatim}
+% \frage
+% How large is the radius of an Uranium-ion?
+% \antwort
+% It is 15nm, under the assumption that …
+% \end{verbatim}
+% If you use the |\frage|–|\antwort|, you must leave an empty line after the answer.
 % \begin{macrocode}
 \newcommand\karte[3][]{\card{#1}{#2}{#3}}
+\long\def\frage#1\antwort#2\par{\karte{#1?}{#2}}
 % \end{macrocode}
 % </class>
 % \Finale
