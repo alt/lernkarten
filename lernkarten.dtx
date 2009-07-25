@@ -34,6 +34,7 @@ Do not distribute a modified version of this file under the same name.
   hyperref,
   polyglossia
 }
+\usepackage[draft,index]{fixme}
 \hypersetup{
   pdfborder= 0 0 0,
   colorlinks=true,
@@ -53,12 +54,15 @@ This is the documentation of the class |lernkarten|. I am writing this class to 
 \end{abstract}
 \tableofcontents
 \section{Usage}
+\subsection{Class Options}
 The usage of this cass is quite easy. Just load it with
 \begin{verbatim}
 \documentclass{lernkarten}
 \end{verbatim}
 Class options are:
 \begin{description}
+\let\olditem\item
+\def\item[#1]{\olditem[\color{blue}#1]}
 \item[number] The number of cards per page. This directly affects the size of each card. You must take care that none of your cards does exceed the given size! Else there will be huge damage and the sun will explode!
 
 A reasonable number, and therefore preset, is 10.
@@ -66,7 +70,21 @@ A reasonable number, and therefore preset, is 10.
 \item[sectiononcards] Prints the section on every card. So you always know what theme this cards belongs to. Default is off.
 \item[enumerate] By default, all cards are enumerated. |enumerate=false| turns enumeration off. With value |section|, the cards will be enumerated section-wise.
 \end{description}
-
+\subsection{Typesetting Cards}
+To typeset a card, write:
+\begin{verbatim}
+\card[ion optics]{How many electrodes are needed for a single lens}{3}
+\end{verbatim}
+for a short question–answer-pair. For longer sentences or formulae, write:
+% Well, the following is quite dirty … I want to have the mark in the empty line, but nowhere else. So I’m using a unicode-spatium
+\begin{verbatim*}
+\question
+question text …
+\answer
+3
+  
+\end{verbatim*}
+It is extremely important that you leave an \emph{empty line} after the answer, as this empty line is part of the command!
 \section{Implementation}
 \DocInput{lernkarten.dtx}
 \end{document}
@@ -159,16 +177,15 @@ A reasonable number, and therefore preset, is 10.
 
 \newcommand\lernkarte[1]{%
   \boxedminipage{.5\textwidth}\textbf{#1}\\[2ex]%
-  \vphantom{\rule[-\height@of@boxes]{0pt}{\height@of@boxes}}
   \minipage[t]{\textwidth}%
 }
 
 \def\endlernkarte{
-  \endminipage
+  \endminipage\vphantom{\rule[-\height@of@boxes]{0pt}{\height@of@boxes}}
   \endboxedminipage\kern-1em
 }
 % \end{macrocode}
-% Now setup some counter. They will be used to number the cards. So you might sort your cards and you can see how far you come on one day … or you can exchange with your partners (”Having trouble on question 1357 – can you explain that equation?“)
+% Now set some counters. They will be used to number the cards. So you might sort your cards and you can see how far you come on one day … or you can exchange with your partners (”Having trouble on question 1357 – can you explain that equation?“)
 % \begin{macrocode}
 \newcounter{total@question}           %% total number of questions
 \setcounter{total@question}{0}
@@ -179,8 +196,8 @@ A reasonable number, and therefore preset, is 10.
 \newcounter{answer@page}             %% the n-th answer@page on one page
 
 \def\card#1#2#3{ % {Title}{question}{answer}
-  %% typesetting the question:
-  % use the environment lernkarte for the layout
+% typesetting the question:
+% use the environment lernkarte for the layout
   \begin{lernkarte}{%
     \stepcounter{total@question}%
     \ifcards@enumerate%
@@ -190,47 +207,36 @@ A reasonable number, and therefore preset, is 10.
   }
   #2
   \end{lernkarte}
-  %
   \expandafter\def\csname answer@\thequestion@page \endcsname{#3}
   \stepcounter{question@page}
-  %
-  %% typeset the answers
-  % when the page is full of questions, …
+% typeset the answers
+% when the page is full of questions, …
   \ifnum\thequestion@page > \cards@per@page
     \set@answers
-  \fi
+  \fi\unskip
 }
 % \end{macrocode}
 % Now we try a nicer way to typeset the answers:
 % \begin{macrocode}
 \def\set@answers{
-  \hspace*{-2em}%    %% FIXME here, too, space must be insertet. why the hell?!
   \clearpage
   \setcounter{answer@page}{1}
-% we loop through all saved answers
-  \loop
 % and typeset them L to R, so every answer is on the back of the correct question
-  \beginR
-% the stop-criterium for the loop
-  \ifnum\theanswer@page = \thequestion@page
-  \else % a <= is needed, actually …
-%
+  \beginR\unskip
+% we loop through all saved answers
+  \whiledo{\theanswer@page < \thequestion@page}{%
     \begin{lernkarte}{\cards@answertext: \stepcounter{total@answer}\thetotal@answer}
       \csname answer@\theanswer@page\endcsname
     \end{lernkarte}
-%
     \stepcounter{answer@page}
-  \repeat
-%
-  \hspace*{2em}   %% FIXME no idea why I need an hspace here to get the position correct …
-  \setcounter{question@page}{1}
-  \setcounter{answer@page}{0}
-  \clearpage
+  }\kern2em%\fixme{why is this kern needed here?}
+  \newpage%
+  \setcounter{question@page}{1}%
+  \setcounter{answer@page}{0}%
 }
 % \end{macrocode}
 
 % typeset the missing answers …
-% ok, this is VERY buggy … but the important information is there …
 % \begin{macrocode}
 \AtEndDocument{
   \set@answers
@@ -252,6 +258,12 @@ A reasonable number, and therefore preset, is 10.
 \newcommand\karte[3][]{\card{#1}{#2}{#3}}
 \long\def\frage#1\antwort#2\par{\karte{#1?}{#2}}
 % \end{macrocode}
+% \section{Known Bugs}
+% There are several bugs, some only regarding the code, some heavily destroying the layout:
+% \begin{description}
+% \item[display formula] Under certain circumstances (which are not clear to me), there will be a problem if you write only one display formula as answer. This can enlarge the regarding card, which destroys the whole layout Just \emph{add} an empty line or whatever – this will in fact \emph{decrease} the size of the answer-card to the correct size.
+% \end{description}
+% \listoffixmes
 % </class>
 % \Finale
 %
