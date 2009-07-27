@@ -91,6 +91,8 @@ question text …
 It is extremely important that you leave an \emph{empty line} after the answer, as this empty line is part of the command!
 \subsection{Structurising}
 You can structure your document using the commands |\cardsection| and |\part|. Actually, it should be |\section|, but the |\tableofcontents| then is making severe problems. So, for now, use |\cardsection|.
+\subsection{Open Questions}
+Whenever anything is not clear when writing the cards, you can put an |\openquestion{What is this exactly?}| at that position. At the end of the document, there will be a table of open questions (|tooq|) where you can check what to ask your friends. |\oq{}| and german |\unklar{}| are aliases for |\openquestion{}|.
 \section{Implementation}
 \DocInput{lernkarten.dtx}
 \end{document}
@@ -124,6 +126,7 @@ You can structure your document using the commands |\cardsection| and |\part|. A
 
 \LoadClass[fleqn]{scrartcl}
 \RequirePackage{
+  amsmath,
   boxedminipage,
   calc,
   geometry,
@@ -132,6 +135,11 @@ You can structure your document using the commands |\cardsection| and |\part|. A
   polyglossia,
   scrpage2,
   xltxtra
+}
+\hypersetup{%
+  pdfborder=false,%
+  colorlinks=true,%
+  linkcolor=blue%
 }
 % \end{macrocode}
 % For evalutation of the enumeration we need some booleans. First one: enumeration at all, second one: section-wise enumeration.
@@ -147,6 +155,7 @@ You can structure your document using the commands |\cardsection| and |\part|. A
 \setlength{\parindent}{0em}
 
 \def\cards@answertext{Antwort}
+\def\cards@openquestiontext{List of Open Questions}
 
 \def\cards@part{}
 \def\cards@sect{}
@@ -256,35 +265,42 @@ You can structure your document using the commands |\cardsection| and |\part|. A
   \setcounter{answer@page}{0}%
 }
 % \end{macrocode}
-
-% typeset the missing answers …
+% Now the definition and setting of the \emph{table of open questions} (tooq):
 % \begin{macrocode}
-\AtEndDocument{
-  \set@answers
+\addtotoclist[tooq]{tooq}
+\newcommand{\listoftooqname}{\cards@openquestiontext}
+\newcounter{openquestion}
+\def\frownie{\color{blue}\raisebox{2ex}{\bfseries\rotatebox{-90}{\small :-(}}}
+\def\cards@mark@oq{\frownie}
+\def\openquestion#1{
+  \refstepcounter{openquestion}%
+  \newcommand*{\l@tooq}{\l@figure}%
+  \addcontentsline{tooq}{figure}{%
+  \protect\numberline{\textbf{\theopenquestion}}\textbf{#1}}%
+  \cards@mark@oq
 }
 % \end{macrocode}
-% And finally the user-interface. For short question-answer groups, use |\karte|. For longer pairs, use the |\question|–|\answer|-construct. Example:
-% \begin{verbatim}
-% \karte[Ionradius]{ion radius of U?}{15nm}
-% \end{verbatim}
-% or
-% \begin{verbatim}
-% \question
-% How large is the radius of an Uranium-ion?
-% \answer
-% It is 15nm, under the assumption that …
-% \end{verbatim}
-% If you use the |\question|–|\answer|, you must leave an empty line after the answer.
+% typeset the missing answers and the table of open questions.
+% \begin{macrocode}
+\AtEndDocument{
+  \cardssection{\cards@openquestiontext}
+  \listoftoc{tooq}
+}
+% \end{macrocode}
+% And finally the user-interface. German names and shorthands for above |\def|d functions:
 % \begin{macrocode}
 \newcommand\karte[3][]{\card{#1}{#2}{#3}}
 \long\def\question#1\answer#2\par{\karte{#1}{#2}}
 \long\def\frage#1\antwort#2\par{\karte{#1}{#2}}
+\let\unklar\openquestion
+\let\oq\openquestion
 % \end{macrocode}
 % </class>
 % \section{Known Bugs}\label{bugs}
 % There are several bugs, some only regarding the code, some heavily destroying the layout:
 % \begin{description}
 % \item[display formula] Under certain circumstances (which are not clear to me), there will be a problem if you write only one display formula as answer. This can enlarge the regarding card, which destroys the whole layout Just \emph{add} an empty line or whatever – this will in fact \emph{decrease} the size of the answer-card to the correct size.
+% \item[tabular] The same things for tabulars. But so far I have no idea how to fix this.
 % \item[size of cards] With the default implementation, 10 cards fill one page. If you use another number of cards, you maybe have to correct the size, as the calculation of the height does something strange. Use the command |\setcorrectionfactor{1.3}| to get the height that fits. Default is |\setcorrectionfactor{1.5}| vor 10 cards.
 % \item[fixme] The list of ”FiXme“s itself must be fixed … strange enough …
 % \end{description}
