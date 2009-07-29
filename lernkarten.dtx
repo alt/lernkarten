@@ -173,7 +173,8 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
   \chead{\cards@part\cards@sect}
 \else
 \fi
-\newcommand\cardssection[1]{\cards@section{#1}}
+\let\oldsection\section
+\def\section{\@ifstar{\oldsection*}{\cards@section}}
 \newcommand\cards@section[1]{
   \ifnum \thequestion@page > 1
     \set@answers
@@ -293,7 +294,7 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 % typeset the missing answers and the table of open questions.
 % \begin{macrocode}
 \AtEndDocument{
-  \cardssection{\cards@openquestiontext}
+  \section{\cards@openquestiontext}
   \listoftoc{tooq}
 }
 % \end{macrocode}
