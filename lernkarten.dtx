@@ -57,7 +57,7 @@ If you have any suggestions or comments, just drop me a mail, I’ll be happy to
 \tableofcontents
 \section{Usage}
 \subsection{Language}
-So far, the whole user interface is english. Maybe I’ll add full support for german.
+So far, the whole user interface is english. Support for german is being implemented. Use |german| as class-option to active it.
 \subsection{Class Options}
 The usage of this cass is quite easy. Just load it with
 \begin{verbatim}
@@ -100,7 +100,7 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 %
 %<*class>
 % \fi
-% We begin with loading of options and setting of constants:
+% We begin with loading of options and setting of constants that are needed even before defining the keys:
 % \begin{macrocode}
 \def\cards@per@page{10}
 \def\cards@enumerate@value{}
@@ -122,6 +122,8 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 \DeclareOptionX{nummerieren}{\def\cards@enumerate@value{#1}}
 \DeclareOptionX{enumerate}{\def\cards@enumerate@value{#1}}
 \DeclareOptionX{sectionsoncards}{\def\cards@enumerate@value{#1}}
+\DeclareOptionX{german}{\def\cards@language{german}}
+\DeclareOptionX{language}{\def\cards@language{#1}}
 \ProcessOptionsX
 
 \LoadClass[fleqn]{scrartcl}
@@ -141,27 +143,29 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
   colorlinks=true,%
   linkcolor=blue%
 }
-% \end{macrocode}
-% For evalutation of the enumeration we need some booleans. First one: enumeration at all, second one: section-wise enumeration.
-% \begin{macrocode}
-\ifthenelse{\equal{\cards@enumerate@value}{false}}{\cards@enumeratefalse}{}
-\ifthenelse{\equal{\cards@enumerate@value}{section}}{\cards@enumerate@sectiontrue}{}
-
 \geometry{
   bindingoffset=0cm,
   margin=1cm,
   headsep=0.2cm
 }
 \setlength{\parindent}{0em}
-
-\def\cards@answertext{Antwort}
-\def\cards@openquestiontext{List of Open Questions}
-
-\def\cards@part{}
-\def\cards@sect{}
+% \end{macrocode}
+% Language specific settings. Only german and english are available so far! (So a simple |\ifthenelse| does the job.)
+% \begin{macrocode}
+\setmainlanguage{\cards@language}
+\ifthenelse{\equal{\languagename}{german}}{
+  \def\cards@answertext{Antwort}
+  \def\cards@openquestiontext{Liste offener Fragen}
+}{
+  \def\cards@answertext{answer}
+  \def\cards@openquestiontext{List of Open Questions}
+}
 % \end{macrocode}
 % Now, the pagelayout. |scrheadings| is used and |part:section| is written on top of every site. If option |noheader| is given, there will be no header. This might be useful for printing, while headers are useful for view on screen.
 % \begin{macrocode}
+\def\cards@part{}
+\def\cards@sect{}
+
 \pagestyle{scrheadings}
 \setkomafont{pagehead}{\normalfont\bfseries}
 \cfoot{}
@@ -198,6 +202,11 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 % Need |\TeXXeTstate=1| for the right-to-left typesetting of the answers
 % \begin{macrocode}
 \TeXXeTstate=1
+% \end{macrocode}
+% For evalutation of the enumeration we need some booleans. First one: enumeration at all, second one: section-wise enumeration.
+% \begin{macrocode}
+\ifthenelse{\equal{\cards@enumerate@value}{false}}{\cards@enumeratefalse}{}
+\ifthenelse{\equal{\cards@enumerate@value}{section}}{\cards@enumerate@sectiontrue}{}
 % \end{macrocode}
 % The calculation of the height of the cards is straight-forward: Textheight divided by the number of cards. Unfortunately, this does \emph{not} work as expected! There is a correction factor needed – even at user level :(
 % See page \pageref{bugs}.
@@ -306,7 +315,7 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 % \item[size of cards] With the default implementation, 10 cards fill one page. If you use another number of cards, you maybe have to correct the size, as the calculation of the height does something strange. Use the command |\setcorrectionfactor{1.3}| to get the height that fits. Default is |\setcorrectionfactor{1.5}| for 10 cards.
 % \end{description}
 % \section{To Dos}
-% Some things that should be implemented but aren’t so far:
+% Some things that should be implemented but aren’t so far or are very poor at the moment:
 % \begin{description}
 %   \item[sectioning] The sectioning is more than miserable right now. That should be implemented in a sensible way …
 % \end{description}
