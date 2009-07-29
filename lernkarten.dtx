@@ -90,7 +90,7 @@ question text …
 \end{verbatim*}
 It is extremely important that you leave an \emph{empty line} after the answer, as this empty line is part of the command!
 \subsection{Structurising}
-You can structure your document using the commands |\cardsection| and |\part|. Actually, it should be |\section|, but the |\tableofcontents| then is making severe problems. So, for now, use |\cardsection|.
+You can structure your document using the normal commands |\section| and |\part|. Depending on class options, the regarding part and section will be printed on the top of the pages and/or on the cards itself.
 \subsection{Open Questions}
 Whenever anything is not clear when writing the cards, you can put an |\openquestion{}| at that position. At the end of the document, there will be a table of open questions (|tooq|) where the arguments of |\openquestion{}| are listet whith pagenumbers and links to the cards. |\oq{}| and german |\unklar{}| are aliases for |\openquestion{}|.
 \section{Implementation}
@@ -318,7 +318,7 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 % \section{To Dos}
 % Some things that should be implemented but aren’t so far or are very poor at the moment:
 % \begin{description}
-%   \item[sectioning] The sectioning is more than miserable right now. That should be implemented in a sensible way …
+% \item No idea at the moment …
 % \end{description}
 % \Finale
 % \endinput
