@@ -71,11 +71,11 @@ Class options are: (english/german, if available)
 
 A reasonable number, and therefore preset, is 10.
 \item[noheader] If you use sections and/or parts to structure your cards, they will be in the header. |noheader| will turn this off.
-\item[sectionsoncards] Prints the section on every card. So you always know what theme this cards belongs to. Default is off. Take care that it is \emph{sectionsoncards}, but not \emph{sectionscards}.
+\item[sectionsoncards] Prints the section on every card. So you always know what theme this cards belongs to. Default is off. Take care that it is \emph{sections\textbf{on}cards}, but not \emph{sections\-cards}.
 \item[enumerate/nummerieren] By default, all cards are enumerated. |enumerate=false| turns enumeration off. With |enumerate=section|, the cards will be enumerated section-wise.
 \end{description}
 \subsection{Typesetting Cards}
-To typeset a card, write:
+There are approximately three ways to typeset a card: Write
 \begin{verbatim}
 \card[ion optics]{How many electrodes are needed for a single lens}{3}
 \end{verbatim}
@@ -89,10 +89,22 @@ question text …
   
 \end{verbatim*}
 It is extremely important that you leave an \emph{empty line} after the answer, as this empty line is part of the command!
+
+For the lazy guys:
+\begin{verbatim*}
+\shortquestion
+questiontext
+
+answertext
+
+\end{verbatim*}
+Again, the empty lines \emph{must} be given! Else your document will most probably not compile! The |questiontext| or |answertext| can be anything that has no empty lines. For such, use |\card| or |\question|.
 \subsection{Structurising}
 You can structure your document using the normal commands |\section| and |\part|. Depending on class options, the regarding part and section will be printed on the top of the pages and/or on the cards itself.
 \subsection{Open Questions}
 Whenever anything is not clear when writing the cards, you can put an |\openquestion{}| at that position. At the end of the document, there will be a table of open questions (|tooq|) where the arguments of |\openquestion{}| are listet whith pagenumbers and links to the cards. |\oq{}| and german |\unklar{}| are aliases for |\openquestion{}|.
+
+If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rotatebox{-90}{\small :-(}}} (|\frownie|) will be set. If you want to change that symbol or want none at all, say |\openquestionmark{your mark}|.
 \section{Implementation}
 \DocInput{lernkarten.dtx}
 \end{document}
@@ -121,11 +133,13 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 \DeclareOptionX{noheader}{\cards@headerfalse}
 \DeclareOptionX{nummerieren}{\def\cards@enumerate@value{#1}}
 \DeclareOptionX{enumerate}{\def\cards@enumerate@value{#1}}
-\DeclareOptionX{sectionsoncards}{\def\cards@enumerate@value{#1}}
+\DeclareOptionX{sectionsoncards}{\cards@sectioncardstrue}
 \DeclareOptionX{german}{\def\cards@language{german}}
 \DeclareOptionX{language}{\def\cards@language{#1}}
 \ProcessOptionsX
-
+% \end{macrocode}
+% Now loading of the class and usefull packages. |amsmath| is surely needed for any mathematic typesetting, |boxedminipage| is needed for the cards, etc. Then setup of the hyperlinks and page layout.
+% \begin{macrocode}
 \LoadClass[fleqn]{scrartcl}
 \RequirePackage{
   amsmath,
@@ -173,22 +187,25 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
   \chead{\cards@part\cards@sect}
 \else
 \fi
+% \end{macrocode}
+% The definition of the sections is a bit tricky. For the table of contents, we need a valid |\section*| command, so we save it by the |\@ifstar| construct. The rest is for setting the sections as wishey by the user: resetting the counters, writing the section on the cards and/or in the headings. Definition of |\part| is way more straight-forward. |\subsection| and |\subsubsection| have no effect at the moment, but can be used.
+% \begin{macrocode}
 \let\oldsection\section
-\def\section{\@ifstar{\oldsection*}{\cards@section}}
+\renewcommand\section{\@ifstar{\oldsection*}{\cards@section}}
+%
 \newcommand\cards@section[1]{
-  \ifnum \thequestion@page > 1
+  \ifnum \thequestion@page > 1  %% needed here for conistent page numbering
     \set@answers
   \fi
   \def\cards@sect{#1}
   \ifcards@enumerate@section
     \setcounter{total@question}{0}
+    \setcounter{total@answer}{0}
   \fi
-%
   \refstepcounter{section}%
   \addcontentsline{toc}{section}{%
       \protect\numberline{\thesection}#1}%
 }
-
 \renewcommand\part[1]{
   \ifnum \thequestion@page > 1
     \set@answers
@@ -199,6 +216,8 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
   \addcontentsline{toc}{part}{%
   \protect\numberline{#1}}%
 }
+\renewcommand\subsection[1]{}
+\renewcommand\subsubsection[1]{}
 % \end{macrocode}
 % Need |\TeXXeTstate=1| for the right-to-left typesetting of the answers
 % \begin{macrocode}
@@ -220,7 +239,6 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
   \boxedminipage{.5\textwidth}\textbf{#1}\\[2ex]%
   \minipage[t]{\textwidth}%
 }
-
 \def\endlernkarte{
   \endminipage\vphantom{\rule[-\height@of@boxes]{0pt}{\height@of@boxes}}
   \endboxedminipage\kern-1em
@@ -235,12 +253,13 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 \newcounter{question@page}     %% the n-th question on one page
 \setcounter{question@page}{1}
 \newcounter{answer@page}             %% the n-th answer@page on one page
-
 \def\card#1#2#3{ % {Title}{question}{answer}
-% typesetting the question:
-% use the environment lernkarte for the layout
+% typesetting the question: use the environment lernkarte for the layout
   \begin{lernkarte}{%
     \stepcounter{total@question}%
+    \ifcards@sectioncards
+      \cards@sect~%
+    \fi
     \ifcards@enumerate%
       \thetotal@question: %
     \fi%
@@ -250,8 +269,7 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
   \end{lernkarte}
   \expandafter\def\csname answer@\thequestion@page \endcsname{#3}
   \stepcounter{question@page}
-% typeset the answers
-% when the page is full of questions, …
+% typeset the answers when the page is full of questions.
   \ifnum\thequestion@page > \cards@per@page
     \set@answers
   \fi\unskip
@@ -278,7 +296,7 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 % \end{macrocode}
 % Now the definition and setting of the \emph{table of open questions} (tooq):
 % \begin{macrocode}
-\addtotoclist[tooq]{tooq}
+\addtotoclist[tooq] {tooq}
 \newcommand{\listoftooqname}{\cards@openquestiontext}
 \newcounter{openquestion}
 \def\frownie{\color{blue}\raisebox{2ex}{\bfseries\rotatebox{-90}{\small :-(}}}
@@ -294,8 +312,17 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 % typeset the missing answers and the table of open questions.
 % \begin{macrocode}
 \AtEndDocument{
-  \section{\cards@openquestiontext}
+  \part{\cards@openquestiontext}
   \listoftoc{tooq}
+}
+\author{no author given}
+\title{no title given}
+\date{}
+\AtBeginDocument{
+  \maketitle
+  \newpage
+  \tableofcontents
+  \newpage
 }
 % \end{macrocode}
 % And finally the user-interface. German names and shorthands for above |\def|d functions:
@@ -303,8 +330,10 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 \newcommand\karte[3][]{\card{#1}{#2}{#3}}
 \long\def\question#1\answer#2\par{\karte{#1}{#2}}
 \long\def\frage#1\antwort#2\par{\karte{#1}{#2}}
+\def\shortquestion#1\par#2\par{\frage #1 \antwort #2 \par}
 \let\unklar\openquestion
 \let\oq\openquestion
+\def\openquestionmark#1{\def\cards@mark@oq{#1}}
 % \end{macrocode}
 % </class>
 % \section{Known Bugs}\label{bugs}
@@ -318,7 +347,7 @@ Whenever anything is not clear when writing the cards, you can put an |\openques
 % \section{To Dos}
 % Some things that should be implemented but aren’t so far or are very poor at the moment:
 % \begin{description}
-% \item No idea at the moment …
+% \item |\section| should have an optional argument for short titles.
 % \end{description}
 % \Finale
 % \endinput
