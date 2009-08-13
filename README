@@ -1,7 +1,7 @@
 The class lernkarten provides a very easy way to typeset learn cards. So you can well prepare for your exams.
 Actually, I should be learning for one now …
 
-For documentation, download lernkarten.dtx and compile it using xelatex:
+For documentation, see the file lernkarten.pdf or download lernkarten.dtx and compile it using xelatex:
 
 xelatex lernkarten.dtx
 
