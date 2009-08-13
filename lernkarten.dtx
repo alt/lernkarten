@@ -170,7 +170,11 @@ If you jump over a certain section in your book/script and want to remember that
   margin=1cm,
   headsep=0.2cm
 }
+% \end{macrocode}
+% We don’t want to waste space on our important cards, so set parindent and mathindent to zero.
+% \begin{macrocode}
 \setlength{\parindent}{0em}
+\setlength{\mathindent}{0em}
 % \end{macrocode}
 % Language specific settings. Only german and english are available so far! (So a simple |\ifthenelse| does the job.)
 % \begin{macrocode}
