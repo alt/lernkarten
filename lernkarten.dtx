@@ -34,11 +34,11 @@ Do not distribute a modified version of this file under the same name.
   hyperref,
   polyglossia
 }
-\usepackage[draft,index,marginclue]{fixme}
 \hypersetup{
   pdfborder= 0 0 0,
   colorlinks=true,
-  linkcolor=blue
+  linkcolor=deepblue,
+  filecolor=blue
 }
 \setmainlanguage{english}
 \setmainfont{TeX Gyre Pagella}
@@ -56,23 +56,23 @@ If you have any suggestions or comments, just drop me a mail, I’ll be happy to
 \end{abstract}
 \tableofcontents
 \section{Usage}
-\subsection{Language}
-So far, the whole user interface is english. Support for german is being implemented. Use |german| as class-option to active it.
 \subsection{Class Options}
 The usage of this cass is quite easy. Just load it with
 \begin{verbatim}
-\documentclass{lernkarten}
+\documentclass[class options]{lernkarten}
 \end{verbatim}
-Class options are: (english/german, if available)
-\begin{description}
-\let\olditem\item
-\def\item[#1]{\olditem[\color{blue}#1]}
-\item[number/anzahl] The number of cards per page. This directly affects the size of each card. You must take care that none of your cards does exceed the given size! Else there will be huge damage and the sun will explode!
+where possible |class| |options| are:
 
-A reasonable number, and therefore preset, is 10.
+\let\olditem\item
+\def\item[#1]{\olditem[\color{deepblue}#1]}
+\begin{description}
+\item[number] The number of cards per page. This directly affects the size of each card. You must take care that none of your cards does exceed the given size! Else the gates to hell will open and the sun will explode.
+
+A reasonable number, and therefore preset, is 10 cards per page.
 \item[noheader] If you use sections and/or parts to structure your cards, they will be in the header. |noheader| will turn this off.
 \item[sectionsoncards] Prints the section on every card. So you always know what theme this cards belongs to. Default is off. Take care that it is \emph{sections\textbf{on}cards}, but not \emph{sections\-cards}.
-\item[enumerate/nummerieren] By default, all cards are enumerated. |enumerate=false| turns enumeration off. With |enumerate=section|, the cards will be enumerated section-wise.
+\item[enumerate] By default, all cards are enumerated. |enumerate=false| turns enumeration off. With |enumerate=section|, the cards will be enumerated section-wise.
+\item[language] Basic language support is available. Give the language as class option |[german]| or say |[language=german|. So far only english (default) and german is supported.
 \end{description}
 \subsection{Typesetting Cards}
 There are approximately three ways to typeset a card: Write
@@ -94,17 +94,22 @@ For the lazy guys:
 \begin{verbatim*}
 \shortquestion
 questiontext
-
+ 
 answertext
-
+ 
 \end{verbatim*}
 Again, the empty lines \emph{must} be given! Else your document will most probably not compile! The |questiontext| or |answertext| can be anything that has no empty lines. For such, use |\card| or |\question|.
 \subsection{Structurising}
 You can structure your document using the normal commands |\section| and |\part|. Depending on class options, the regarding part and section will be printed on the top of the pages and/or on the cards itself.
+
+You might prefer to use |\begin{section}{sectiontitle} … \end{section}| instead. This will produce exactly the same output, but the entire section will be ”foldable“ in your editor so you can fold sections you are not working on. This will concentrate your work on the current stuff.
 \subsection{Open Questions}
 Whenever anything is not clear when writing the cards, you can put an |\openquestion{}| at that position. At the end of the document, there will be a table of open questions (|tooq|) where the arguments of |\openquestion{}| are listet whith pagenumbers and links to the cards. |\oq{}| and german |\unklar{}| are aliases for |\openquestion{}|.
 
 If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rotatebox{-90}{\small :-(}}} (|\frownie|) will be set. If you want to change that symbol or want none at all, say |\openquestionmark{your mark}|.
+\subsection{Sections to Read}
+If you jump over a certain section in your book/script and want to remember that, just type |\sectiontoread{4.4.3. Phasenfluktuationen}|. This will be listed at the end of the document, after the table of open questions. |\str{}| is an alias. No german alias so far.
+
 \section{Implementation}
 \DocInput{lernkarten.dtx}
 \end{document}
@@ -122,17 +127,19 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
 \newif\ifcards@sectioncards
 \newif\ifcards@enumerate
 \newif\ifcards@enumerate@section
+\newif\ifcards@printonly
 \cards@headertrue
 \cards@sectioncardsfalse
 \cards@enumeratetrue
 \cards@enumerate@sectionfalse
+\cards@printonlyfalse
+\def\cards@print@only{}
 
 \RequirePackage{xkeyval}
-\DeclareOptionX{anzahl}{\def\cards@per@page{#1}}
 \DeclareOptionX{number}{\def\cards@per@page{#1}}
 \DeclareOptionX{noheader}{\cards@headerfalse}
-\DeclareOptionX{nummerieren}{\def\cards@enumerate@value{#1}}
 \DeclareOptionX{enumerate}{\def\cards@enumerate@value{#1}}
+\DeclareOptionX{printonly}{\def\cards@print@only{#1}\cards@printonlytrue}
 \DeclareOptionX{sectionsoncards}{\cards@sectioncardstrue}
 \DeclareOptionX{german}{\def\cards@language{german}}
 \DeclareOptionX{language}{\def\cards@language{#1}}
@@ -140,7 +147,8 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
 % \end{macrocode}
 % Now loading of the class and usefull packages. |amsmath| is surely needed for any mathematic typesetting, |boxedminipage| is needed for the cards, etc. Then setup of the hyperlinks and page layout.
 % \begin{macrocode}
-\LoadClass[fleqn]{scrartcl}
+\LoadClass{scrartcl}
+\PassOptionsToClass{fleqn}{scrartcl}
 \RequirePackage{
   amsmath,
   boxedminipage,
@@ -170,9 +178,11 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
 \ifthenelse{\equal{\languagename}{german}}{
   \def\cards@answertext{Antwort}
   \def\cards@openquestiontext{Liste offener Fragen}
+  \def\cards@sectionstoreadtext{Übersprungene Abschnitte}
 }{
   \def\cards@answertext{answer}
   \def\cards@openquestiontext{List of Open Questions}
+  \def\cards@sectionstoreadtext{Sections still to read}
 }
 % \end{macrocode}
 % Now, the pagelayout. |scrheadings| is used and |part:section| is written on top of every site. If option |noheader| is given, there will be no header. This might be useful for printing, while headers are useful for view on screen.
@@ -193,7 +203,15 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
 \let\oldsection\section
 \renewcommand\section{\@ifstar{\oldsection*}{\cards@section}}
 %
+\AtBeginDocument{
+  \let\oldcard\card
+}
 \newcommand\cards@section[1]{
+  \ifcards@printonly
+    \ifthenelse{\equal{\zap@space #1 \@empty}{\cards@print@only}}
+      {\let\card\oldcard}
+      {\def\card##1##2##3{}}
+  \fi
   \ifnum \thequestion@page > 1  %% needed here for conistent page numbering
     \set@answers
   \fi
@@ -210,14 +228,13 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
   \ifnum \thequestion@page > 1
     \set@answers
   \fi
-  \def\cards@sect{#1}
   \def\cards@part{#1:~}
   \refstepcounter{part}%
   \addcontentsline{toc}{part}{%
   \protect\numberline{#1}}%
 }
-\renewcommand\subsection[1]{}
-\renewcommand\subsubsection[1]{}
+\renewcommand\subsection[1]{\unskip}
+\renewcommand\subsubsection[1]{\unskip}
 % \end{macrocode}
 % Need |\TeXXeTstate=1| for the right-to-left typesetting of the answers
 % \begin{macrocode}
@@ -228,20 +245,19 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
 \ifthenelse{\equal{\cards@enumerate@value}{false}}{\cards@enumeratefalse}{}
 \ifthenelse{\equal{\cards@enumerate@value}{section}}{\cards@enumerate@sectiontrue}{}
 % \end{macrocode}
-% The calculation of the height of the cards is straight-forward: Textheight divided by the number of cards. Unfortunately, this does \emph{not} work as expected! There is a correction factor needed – even at user level :(
-% See page \pageref{bugs}.
-%
+% The calculation of the height of the cards is quite straight-forward: Textheight divided by the number of cards – divided by 2 for each column. Minus a certain amount for each row of cards because of intercard-spacing. (Hence the empirical(!) value 2.3em) This is still a bit dirty and unstable, but gives good output for 2 – 28 cards/page (every reasonable value is in that intervall, I guess …
 % \begin{macrocode}
-\def\cards@height@correct@factor{\real{1.5}}  %% FIXME why is this factor needed to fill the page?
-\def\setcorrectionfactor#1{\def\cards@height@correct@factor{\real{#1}}}
-\def\height@of@boxes{\textheight/\cards@per@page\expandafter*\cards@height@correct@factor}
+\newlength\cards@textheight
+\setlength\cards@textheight{\textheight-2.3em*\cards@per@page/2}
+\def\height@of@boxes{\cards@textheight/\cards@per@page*2}
 \newcommand\lernkarte[1]{%
-  \boxedminipage{.5\textwidth}\textbf{#1}\\[2ex]%
-  \minipage[t]{\textwidth}%
+  \boxedminipage{.49\textwidth}%
+  \hspace*{0.01\textwidth}%
+  \minipage[t]{.98\textwidth}\textbf{#1}\\[2ex]%
 }
 \def\endlernkarte{
   \endminipage\vphantom{\rule[-\height@of@boxes]{0pt}{\height@of@boxes}}
-  \endboxedminipage\kern-1em
+  \endboxedminipage\kern.01\textwidth
 }
 % \end{macrocode}
 % Now set some counters. They will be used to number the cards. So you might sort your cards and you can see how far you come on one day … or you can exchange with your partners (”Having trouble on question 1357 – can you explain that equation?“)
@@ -250,11 +266,11 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
 \setcounter{total@question}{0}
 \newcounter{total@answer}           %% total number of answers
 \setcounter{total@answer}{0}
-\newcounter{question@page}     %% the n-th question on one page
+\newcounter{question@page}     %% the N-th question on one page
 \setcounter{question@page}{1}
-\newcounter{answer@page}             %% the n-th answer@page on one page
+\newcounter{answer@page}             %% the N-th answer@page on one page
 \def\card#1#2#3{ % {Title}{question}{answer}
-% typesetting the question: use the environment lernkarte for the layout
+% typesetting the question: using the environment lernkarte for the layout:
   \begin{lernkarte}{%
     \stepcounter{total@question}%
     \ifcards@sectioncards
@@ -267,9 +283,10 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
   }
   #2
   \end{lernkarte}
+% save answer nr. N in a macro \cs{answer@N@page}:
   \expandafter\def\csname answer@\thequestion@page \endcsname{#3}
   \stepcounter{question@page}
-% typeset the answers when the page is full of questions.
+% typeset the answers when the page is full of questions:
   \ifnum\thequestion@page > \cards@per@page
     \set@answers
   \fi\unskip
@@ -296,10 +313,10 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
 % \end{macrocode}
 % Now the definition and setting of the \emph{table of open questions} (tooq):
 % \begin{macrocode}
-\addtotoclist[tooq] {tooq}
+\addtotoclist[tooq]{tooq}
 \newcommand{\listoftooqname}{\cards@openquestiontext}
 \newcounter{openquestion}
-\def\frownie{\color{blue}\raisebox{2ex}{\bfseries\rotatebox{-90}{\small :-(}}}
+\def\frownie{\bgroup\color{blue}\raisebox{2ex}{\bfseries\rotatebox{-90}{\small :-(}}\egroup}
 \def\cards@mark@oq{\frownie}
 \def\openquestion#1{
   \refstepcounter{openquestion}%
@@ -308,12 +325,25 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
   \protect\numberline{\textbf{\theopenquestion}}\textbf{#1}}%
   \cards@mark@oq
 }
+
+\addtotoclist[tosr]{tosr}
+\newcommand{\listoftosrname}{\cards@sectionstoreadtext}
+\newcounter{sectionstoread}
+\def\sectiontoread#1{
+  \refstepcounter{sectionstoread}%
+  \newcommand*{\l@tosr}{\l@figure}%
+  \addcontentsline{tosr}{figure}{%
+  \protect\numberline{\textbf{\thesectionstoread}}\textbf{#1}}%
+}
 % \end{macrocode}
 % typeset the missing answers and the table of open questions.
 % \begin{macrocode}
 \AtEndDocument{
   \part{\cards@openquestiontext}
   \listoftoc{tooq}
+  \newpage
+  \part{\cards@sectionstoreadtext}
+  \listoftoc{tosr}
 }
 \author{no author given}
 \title{no title given}
@@ -325,29 +355,32 @@ If there is an open question, a small {\color{blue}\raisebox{2ex}{\bfseries\rota
   \newpage
 }
 % \end{macrocode}
-% And finally the user-interface. German names and shorthands for above |\def|d functions:
+% And finally the user-interface. German aliases and shorthands for above |\def|’d functions:
 % \begin{macrocode}
 \newcommand\karte[3][]{\card{#1}{#2}{#3}}
 \long\def\question#1\answer#2\par{\karte{#1}{#2}}
 \long\def\frage#1\antwort#2\par{\karte{#1}{#2}}
 \def\shortquestion#1\par#2\par{\frage #1 \antwort #2 \par}
+\newenvironment{cardsection}[1]{\section{TEST}\bgroup}{\egroup}
 \let\unklar\openquestion
 \let\oq\openquestion
+\let\str\sectiontoread
 \def\openquestionmark#1{\def\cards@mark@oq{#1}}
 % \end{macrocode}
 % </class>
 % \section{Known Bugs}\label{bugs}
 % There are several bugs, some only regarding the code, some heavily destroying the layout:
 % \begin{description}
-% \item[references] The references are broken! This is surely \emph{not} section 626!
-% \item[display formula] Under certain circumstances (which are not clear to me), there will be a problem if you write only one display formula as answer. This can enlarge the regarding card, which destroys the whole layout Just \emph{add} an empty line or whatever – this will in fact \emph{decrease} the size of the answer-card to the correct size.
-% \item[tabular] The same things for tabulars. But so far I have no idea how to fix this.
-% \item[size of cards] With the default implementation, 10 cards fill one page. If you use another number of cards, you maybe have to correct the size, as the calculation of the height does something strange. Use the command |\setcorrectionfactor{1.3}| to get the height that fits. Default is |\setcorrectionfactor{1.5}| for 10 cards.
+% \item[display formula] Under certain circumstances (which are not clear to me), there will be a problem if you write only one display formula as answer. This can enlarge the regarding card, which destroys the whole layout.
+% 
+% Just \emph{add} an empty line or a single |\| or whatever – this will in fact then \emph{decrease} the size of the answer-card to the correct size.
+% \item[tabular] The same things for tabulars. But so far I have no idea how to fix this :(
+% \item[references] The references in this documentation are broken! (Avoided so it is not visible to you …)
 % \end{description}
 % \section{To Dos}
 % Some things that should be implemented but aren’t so far or are very poor at the moment:
 % \begin{description}
-% \item |\section| should have an optional argument for short titles.
+% \item[\cs{section}] should have an optional argument for short titles.
 % \end{description}
 % \Finale
 % \endinput
