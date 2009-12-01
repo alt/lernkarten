@@ -333,9 +333,9 @@ If you jump over a certain section in your book/script and want to remember that
 \addtotoclist[tosr]{tosr}
 \newcommand{\listoftosrname}{\cards@sectionstoreadtext}
 \newcounter{sectionstoread}
+\newcommand*{\l@tosr}{\l@figure}%
 \def\sectiontoread#1{
   \refstepcounter{sectionstoread}%
-  \newcommand*{\l@tosr}{\l@figure}%
   \addcontentsline{tosr}{figure}{%
   \protect\numberline{\textbf{\thesectionstoread}}\textbf{#1}}%
 }
