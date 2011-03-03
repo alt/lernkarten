@@ -150,7 +150,7 @@ If you jump over a certain section in your book/script and want to remember that
 \DeclareOptionX{sectionsoncards}{\cards@sectioncardstrue}
 \DeclareOptionX{german}{\def\cards@language{german}}
 \DeclareOptionX{language}{\def\cards@language{#1}}
-\DeclareOptionX{center}{\def\cards@paralign{\center}}
+\DeclareOptionX{center}{\def\cards@paralign{\center\vspace*{-2\baselineskip}}} %% hippo hides in the grass!
 \ProcessOptionsX
 %    \end{macrocode}
 % Now loading of the class and usefull packages. |amsmath| is surely needed for any mathematic typesetting, |boxedminipage| is needed for the cards, etc. Then setup of the hyperlinks and page layout.
