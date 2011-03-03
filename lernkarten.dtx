@@ -175,7 +175,7 @@ If you jump over a certain section in your book/script and want to remember that
 % We don’t want to waste space on our important cards, so set parindent and mathindent to zero.
 %    \begin{macrocode}
 \setlength{\parindent}{0em}
-\setlength{\mathindent}{0em}
+%% \setlength{\mathindent}{0em} %% FIXME: where did this go? …
 %    \end{macrocode}
 % Language specific settings. Only german and english are available so far! (So a simple |\ifthenelse| does the job.)
 %    \begin{macrocode}
@@ -245,7 +245,7 @@ If you jump over a certain section in your book/script and want to remember that
 %    \end{macrocode}
 % Need |\TeXXeTstate=1| for the right-to-left typesetting of the answers
 %    \begin{macrocode}
-\TeXXeTstate=1
+%%% \TeXXeTstate=1 %%FIXME: change from Xe to lua …
 %    \end{macrocode}
 % For evalutation of the enumeration we need some booleans. First one: enumeration at all, second one: section-wise enumeration.
 %    \begin{macrocode}
@@ -305,14 +305,15 @@ If you jump over a certain section in your book/script and want to remember that
   \clearpage
   \setcounter{answer@page}{1}
 % and typeset them L to R, so every answer is on the back of the correct question
-  \beginR\unskip
+%%  \beginR\unskip  %% FIXME: change from Xe to lua
+  \luatextextdir TRT\unskip
 % we loop through all saved answers
   \whiledo{\theanswer@page < \thequestion@page}{%
     \begin{lernkarte}{\cards@answertext: \stepcounter{total@answer}\thetotal@answer}
       \csname answer@\theanswer@page\endcsname
     \end{lernkarte}
     \stepcounter{answer@page}
-  }\kern2em %%% FIXME why is this kern needed here?
+  }\kern-1em %%% FIXME why is this kern needed here?  it’s totally random!
   \newpage%
   \setcounter{question@page}{1}%
   \setcounter{answer@page}{0}%
