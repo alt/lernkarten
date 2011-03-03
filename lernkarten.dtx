@@ -28,29 +28,30 @@ Do not distribute a modified version of this file under the same name.
   \expandafter\endgroup
 \fi
 \ProvidesFile{lernkarten.cls}
-  [24.07.2009 v0.b typeset your lerning cards]
-\documentclass{gmdocc}
+  [03.03.2011 v0.c typeset your lerning cards]
+\documentclass[english]{ltxdoc}
 \usepackage{
-  hyperref,
-  polyglossia
+  babel,
+  fontspec,
+  graphicx,
+  hyperref
 }
 \hypersetup{
   pdfborder= 0 0 0,
   colorlinks=true,
-  linkcolor=deepblue,
+  linkcolor=blue,
   filecolor=blue
 }
-\setmainlanguage{english}
 \setmainfont{TeX Gyre Pagella}
 
-\title{|lernkarten|}
+\title{lernkarten}
 \author{Arno Trautmann\\ \href{mailto:arno.trautmann@gmx.de}{arno.trautmann@gmx.de}}
 \def\marginpartt{\scriptsize\ttfamily}
 
 \begin{document}
 \maketitle
 \begin{abstract}
-This is the documentation of the class |lernkarten|. I am writing this class to have an easy way to typeset my cards for learning for exams, especially diploma-exams. As I always loose and forget things, I wanted to have all important stuff on my computer so I will not forget it. – Just print and learn \raisebox{1.5ex}{\rotatebox{-90}{:-)}}
+This is the documentation of the class |lernkarten|. I am writing this class to have an easy way to typeset my cards for learning for exams, especially diploma-exams. As I always loose and forget things, I wanted to have all important stuff on my computer so I will not forget it. – Just print and learn.
 
 If you have any suggestions or comments, just drop me a mail, I’ll be happy to get any response!
 \end{abstract}
@@ -64,7 +65,7 @@ The usage of this cass is quite easy. Just load it with
 where possible |class| |options| are:
 
 \let\olditem\item
-\def\item[#1]{\olditem[\color{deepblue}#1]}
+\def\item[#1]{\olditem[\color{blue}#1]}
 \begin{description}
 \item[number] The number of cards per page. This directly affects the size of each card. You must take care that none of your cards does exceed the given size! Else the gates to hell will open and the sun will explode.
 
@@ -118,7 +119,7 @@ If you jump over a certain section in your book/script and want to remember that
 %<*class>
 % \fi
 % We begin with loading of options and setting of constants that are needed even before defining the keys:
-% \begin{macrocode}
+%    \begin{macrocode}
 \def\cards@per@page{10}
 \def\cards@enumerate@value{}
 
@@ -144,21 +145,21 @@ If you jump over a certain section in your book/script and want to remember that
 \DeclareOptionX{german}{\def\cards@language{german}}
 \DeclareOptionX{language}{\def\cards@language{#1}}
 \ProcessOptionsX
-% \end{macrocode}
+%    \end{macrocode}
 % Now loading of the class and usefull packages. |amsmath| is surely needed for any mathematic typesetting, |boxedminipage| is needed for the cards, etc. Then setup of the hyperlinks and page layout.
-% \begin{macrocode}
+%    \begin{macrocode}
 \LoadClass{scrartcl}
 \PassOptionsToClass{fleqn}{scrartcl}
 \RequirePackage{
   amsmath,
+  babel,
   boxedminipage,
   calc,
+  fontspec,
   geometry,
   hyperref,
   ifthen,
-  polyglossia,
   scrpage2,
-  xltxtra
 }
 \hypersetup{%
   pdfborder=false,%
@@ -170,14 +171,14 @@ If you jump over a certain section in your book/script and want to remember that
   margin=1cm,
   headsep=0.2cm
 }
-% \end{macrocode}
+%    \end{macrocode}
 % We don’t want to waste space on our important cards, so set parindent and mathindent to zero.
-% \begin{macrocode}
+%    \begin{macrocode}
 \setlength{\parindent}{0em}
 \setlength{\mathindent}{0em}
-% \end{macrocode}
+%    \end{macrocode}
 % Language specific settings. Only german and english are available so far! (So a simple |\ifthenelse| does the job.)
-% \begin{macrocode}
+%    \begin{macrocode}
 \setmainlanguage{\cards@language}
 \ifthenelse{\equal{\languagename}{german}}{
   \def\cards@answertext{Antwort}
@@ -188,24 +189,27 @@ If you jump over a certain section in your book/script and want to remember that
   \def\cards@openquestiontext{List of Open Questions}
   \def\cards@sectionstoreadtext{Sections still to read}
 }
-% \end{macrocode}
+%    \end{macrocode}
 % Now, the pagelayout. |scrheadings| is used and |part:section| is written on top of every site. If option |noheader| is given, there will be no header. This might be useful for printing, while headers are useful for view on screen.
-% \begin{macrocode}
+%    \begin{macrocode}
 \def\cards@part{}
 \def\cards@sect{}
 
 \pagestyle{scrheadings}
-\setkomafont{pagehead}{\normalfont\bfseries}
+\setkomafont{pageheadfoot}{\normalfont\bfseries}
 \cfoot{}
 \ifcards@header
   \chead{\cards@part\cards@sect}
 \else
 \fi
-% \end{macrocode}
-% The definition of the sections is a bit tricky. For the table of contents, we need a valid |\section*| command, so we save it by the |\@ifstar| construct. The rest is for setting the sections as wishey by the user: resetting the counters, writing the section on the cards and/or in the headings. Definition of |\part| is way more straight-forward. |\subsection| and |\subsubsection| have no effect at the moment, but can be used.
-% \begin{macrocode}
+%    \end{macrocode}
+% The definition of the sections is a bit tricky. For the table of contents, we need a valid |\section*| command, so we save it by the |\@ifstar| construct. The rest is for setting the sections as wished by the user: resetting the counters, writing the section on the cards and/or in the headings. Definition of |\part| is way more straight-forward. |\subsection| and |\subsubsection| have no effect at the moment, but can be used.
+%    \begin{macrocode}
 \let\oldsection\section
 \renewcommand\section{\@ifstar{\oldsection*}{\cards@section}}
+\let\sec\relax
+\newenvironment{sec}[1]{\section{#1}}{}
+
 %
 \AtBeginDocument{
   \let\oldcard\card
@@ -239,18 +243,18 @@ If you jump over a certain section in your book/script and want to remember that
 }
 \renewcommand\subsection[1]{\unskip}
 \renewcommand\subsubsection[1]{\unskip}
-% \end{macrocode}
+%    \end{macrocode}
 % Need |\TeXXeTstate=1| for the right-to-left typesetting of the answers
-% \begin{macrocode}
+%    \begin{macrocode}
 \TeXXeTstate=1
-% \end{macrocode}
+%    \end{macrocode}
 % For evalutation of the enumeration we need some booleans. First one: enumeration at all, second one: section-wise enumeration.
-% \begin{macrocode}
+%    \begin{macrocode}
 \ifthenelse{\equal{\cards@enumerate@value}{false}}{\cards@enumeratefalse}{}
 \ifthenelse{\equal{\cards@enumerate@value}{section}}{\cards@enumerate@sectiontrue}{}
-% \end{macrocode}
+%    \end{macrocode}
 % The calculation of the height of the cards is quite straight-forward: Textheight divided by the number of cards – divided by 2 for each column. Minus a certain amount for each row of cards because of intercard-spacing. (Hence the empirical(!) value 2.3em) This is still a bit dirty and unstable, but gives good output for 2 – 28 cards/page (every reasonable value is in that intervall, I guess …
-% \begin{macrocode}
+%    \begin{macrocode}
 \newlength\cards@textheight
 \setlength\cards@textheight{\textheight-2.3em*\cards@per@page/2}
 \def\height@of@boxes{\cards@textheight/\cards@per@page*2}
@@ -263,9 +267,9 @@ If you jump over a certain section in your book/script and want to remember that
   \endminipage\vphantom{\rule[-\height@of@boxes]{0pt}{\height@of@boxes}}
   \endboxedminipage\kern.01\textwidth
 }
-% \end{macrocode}
+%    \end{macrocode}
 % Now set some counters. They will be used to number the cards. So you might sort your cards and you can see how far you come on one day … or you can exchange with your partners (”Having trouble on question 1357 – can you explain that equation?“)
-% \begin{macrocode}
+%    \begin{macrocode}
 \newcounter{total@question}           %% total number of questions
 \setcounter{total@question}{0}
 \newcounter{total@answer}           %% total number of answers
@@ -295,9 +299,9 @@ If you jump over a certain section in your book/script and want to remember that
     \set@answers
   \fi\unskip
 }
-% \end{macrocode}
+%    \end{macrocode}
 % Now we try a nicer way to typeset the answers:
-% \begin{macrocode}
+%    \begin{macrocode}
 \def\set@answers{
   \clearpage
   \setcounter{answer@page}{1}
@@ -314,9 +318,9 @@ If you jump over a certain section in your book/script and want to remember that
   \setcounter{question@page}{1}%
   \setcounter{answer@page}{0}%
 }
-% \end{macrocode}
+%    \end{macrocode}
 % Now the definition and setting of the \emph{table of open questions} (tooq):
-% \begin{macrocode}
+%    \begin{macrocode}
 \addtotoclist[tooq]{tooq}
 \newcommand{\listoftooqname}{\cards@openquestiontext}
 \newcounter{openquestion}
@@ -339,9 +343,9 @@ If you jump over a certain section in your book/script and want to remember that
   \addcontentsline{tosr}{figure}{%
   \protect\numberline{\textbf{\thesectionstoread}}\textbf{#1}}%
 }
-% \end{macrocode}
+%    \end{macrocode}
 % typeset the missing answers and the table of open questions.
-% \begin{macrocode}
+%    \begin{macrocode}
 \AtEndDocument{
   \part{\cards@openquestiontext}
   \listoftoc{tooq}
@@ -358,9 +362,9 @@ If you jump over a certain section in your book/script and want to remember that
   \tableofcontents
   \newpage
 }
-% \end{macrocode}
+%    \end{macrocode}
 % And finally the user-interface. German aliases and shorthands for above |\def|’d functions:
-% \begin{macrocode}
+%    \begin{macrocode}
 \newcommand\karte[3][]{\card{#1}{#2}{#3}}
 \long\def\question#1\answer#2\par{\karte{#1}{#2}}
 \long\def\frage#1\antwort#2\par{\karte{#1}{#2}}
@@ -370,7 +374,7 @@ If you jump over a certain section in your book/script and want to remember that
 \let\oq\openquestion
 \let\str\sectiontoread
 \def\openquestionmark#1{\def\cards@mark@oq{#1}}
-% \end{macrocode}
+%    \end{macrocode}
 % </class>
 % \section{Known Bugs}\label{bugs}
 % There are several bugs, some only regarding the code, some heavily destroying the layout:
