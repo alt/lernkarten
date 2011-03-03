@@ -74,12 +74,16 @@ A reasonable number, and therefore preset, is 10 cards per page.
 \item[sectionsoncards] Prints the section on every card. So you always know what theme this cards belongs to. Default is off. Take care that it is \emph{sections\textbf{on}cards}, but not \emph{sections\-cards}.
 \item[enumerate] By default, all cards are enumerated. |enumerate=false| turns enumeration off. With |enumerate=section|, the cards will be enumerated section-wise.
 \item[language] Basic language support is available. Give the language as class option |[german]| or say |[language=german|. So far only english (default) and german is supported.
+\item[center] Will center both the question and the answer horizontally on the card.
 \end{description}
 \subsection{Typesetting Cards}
 There are approximately three ways to typeset a card: Write
 \begin{verbatim}
 \card[ion optics]{How many electrodes are needed for a single lens}{3}
 \end{verbatim}
+!! ATTENTION !!
+|\card[]| does NOT work like this at the moment!!
+
 for a short question–answer-pair. For longer sentences or formulae, write:
 % Well, the following is quite dirty … I want to have the mark in the empty line, but nowhere else. So I’m using a unicode-spatium
 \begin{verbatim*}
@@ -135,6 +139,8 @@ If you jump over a certain section in your book/script and want to remember that
 \cards@enumerate@sectionfalse
 \cards@printonlyfalse
 \def\cards@print@only{}
+\def\cards@paralign{} %% to align how you like; mostly centered?
+
 
 \RequirePackage{xkeyval}
 \DeclareOptionX{number}{\def\cards@per@page{#1}}
@@ -144,6 +150,7 @@ If you jump over a certain section in your book/script and want to remember that
 \DeclareOptionX{sectionsoncards}{\cards@sectioncardstrue}
 \DeclareOptionX{german}{\def\cards@language{german}}
 \DeclareOptionX{language}{\def\cards@language{#1}}
+\DeclareOptionX{center}{\def\cards@paralign{\center}}
 \ProcessOptionsX
 %    \end{macrocode}
 % Now loading of the class and usefull packages. |amsmath| is surely needed for any mathematic typesetting, |boxedminipage| is needed for the cards, etc. Then setup of the hyperlinks and page layout.
@@ -243,10 +250,6 @@ If you jump over a certain section in your book/script and want to remember that
 \renewcommand\subsection[1]{\unskip}
 \renewcommand\subsubsection[1]{\unskip}
 %    \end{macrocode}
-% Need |\TeXXeTstate=1| for the right-to-left typesetting of the answers
-%    \begin{macrocode}
-%%% \TeXXeTstate=1 %%FIXME: change from Xe to lua …
-%    \end{macrocode}
 % For evalutation of the enumeration we need some booleans. First one: enumeration at all, second one: section-wise enumeration.
 %    \begin{macrocode}
 \ifthenelse{\equal{\cards@enumerate@value}{false}}{\cards@enumeratefalse}{}
@@ -288,6 +291,7 @@ If you jump over a certain section in your book/script and want to remember that
     \fi%
     #1%
   }
+  \cards@paralign
   #2
   \end{lernkarte}
 % save answer nr. N in a macro \cs{answer@N@page}:
@@ -305,11 +309,11 @@ If you jump over a certain section in your book/script and want to remember that
   \clearpage
   \setcounter{answer@page}{1}
 % and typeset them L to R, so every answer is on the back of the correct question
-%%  \beginR\unskip  %% FIXME: change from Xe to lua
-  \luatextextdir TRT\unskip
+  \luatextextdir TRT\unskip  %% using luaTeX directions – no idea if this is correct and/or robust at all.
 % we loop through all saved answers
   \whiledo{\theanswer@page < \thequestion@page}{%
     \begin{lernkarte}{\cards@answertext: \stepcounter{total@answer}\thetotal@answer}
+      \cards@paralign
       \csname answer@\theanswer@page\endcsname
     \end{lernkarte}
     \stepcounter{answer@page}
